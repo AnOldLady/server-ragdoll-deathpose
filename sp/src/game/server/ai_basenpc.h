@@ -1044,6 +1044,12 @@ public:
 	void				SetActivityAndSequence(Activity NewActivity, int iSequence, Activity translatedActivity, Activity weaponActivity);
 
 #ifdef MAPBASE
+	//Expose m_iDeathPose and m_iDeathPoseFrame for server ragdoll to use
+	int					GetDeathPose(void)		{ return m_iDeathPose; }
+	int					GetDeathPoseFrame(void) { return m_iDeathFrame; }
+#endif
+
+#ifdef MAPBASE
 	//-----------------------------------------------------
 
 	// Returns the gesture variant of an activity (i.e. "ACT_GESTURE_RANGE_ATTACK1")

@@ -22,6 +22,7 @@
 #include "hierarchy.h"
 #ifdef MAPBASE
 #include "decals.h"
+#include "death_pose.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -29,6 +30,7 @@
 
 #ifdef MAPBASE
 ConVar ragdoll_autointeractions("ragdoll_autointeractions", "1", FCVAR_NONE, "Controls whether we should rely on hardcoded keyvalues or automatic flesh checks for ragdoll physgun interactions.");
+ConVar ai_death_pose_server_enabled("ai_death_pose_server_enabled", "1", FCVAR_NONE, "Toggles the death pose fix code, but for server ragdolls.");
 #define IsBody() VPhysicsIsFlesh()
 
 ConVar ragdoll_always_allow_use( "ragdoll_always_allow_use", "0", FCVAR_NONE, "Allows all ragdolls to be used and, if they aren't explicitly set to prevent pickup, picked up." );
@@ -811,7 +813,11 @@ void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const 
 	params.forceVector = forceVector;
 	params.forceBoneIndex = forceBone;
 	params.forcePosition = forcePos;
+#ifdef MAPBASE
+	params.pCurrentBones = ai_death_pose_server_enabled.GetBool() ? pPrevBones : pBoneToWorld;
+#else
 	params.pCurrentBones = pBoneToWorld;
+#endif
 	params.jointFrictionScale = 1.0;
 	params.allowStretch = HasSpawnFlags(SF_RAGDOLLPROP_ALLOW_STRETCH);
 #ifdef MAPBASE
@@ -1492,6 +1498,37 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 
 	float fPreviousCycle = clamp(pAnimating->GetCycle()-( dt * ( 1 / fSequenceDuration ) ),0.f,1.f);
 	float fCurCycle = pAnimating->GetCycle();
+
+#ifdef MAPBASE
+	if (ai_death_pose_server_enabled.GetBool() && pAnimating->IsNPC()) {
+		CAI_BaseNPC* npc = (CAI_BaseNPC*)pAnimating;
+		if (npc) {
+			int currentSeq = pAnimating->GetSequence();
+
+			//Force pAnimating to do the deathpose
+			pAnimating->SetSequence(Activity(npc->GetDeathPose()));
+			pAnimating->SetCycle((float)npc->GetDeathPoseFrame() / MAX_DEATHPOSE_FRAMES);
+
+			//Store the position
+			pAnimating->SetupBones(pBoneToWorldNext, BONE_USED_BY_ANYTHING);
+
+			//Restore the current sequence and cycle
+			pAnimating->SetSequence(currentSeq);
+
+			pAnimating->SetCycle(fCurCycle);
+			pAnimating->SetupBones(pBoneToWorld, BONE_USED_BY_ANYTHING);
+		}
+	}
+	else {
+		// Get current bones positions
+		pAnimating->SetupBones( pBoneToWorldNext, BONE_USED_BY_ANYTHING );
+		// Get previous bones positions
+		pAnimating->SetCycle( fPreviousCycle );
+		pAnimating->SetupBones( pBoneToWorld, BONE_USED_BY_ANYTHING );		
+		// Restore current cycle
+		pAnimating->SetCycle( fCurCycle );
+	}
+#else
 	// Get current bones positions
 	pAnimating->SetupBones( pBoneToWorldNext, BONE_USED_BY_ANYTHING );
 	// Get previous bones positions
@@ -1499,6 +1536,7 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 	pAnimating->SetupBones( pBoneToWorld, BONE_USED_BY_ANYTHING );		
 	// Restore current cycle
 	pAnimating->SetCycle( fCurCycle );
+#endif
 
 	// Reset previous bone flags
 	pAnimating->ClearBoneCacheFlags( BCF_NO_ANIMATION_SKIP );
