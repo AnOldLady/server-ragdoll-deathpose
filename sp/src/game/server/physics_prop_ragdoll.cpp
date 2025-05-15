@@ -1500,33 +1500,38 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 	float fCurCycle = pAnimating->GetCycle();
 
 #ifdef MAPBASE
+	int deathpose = ACT_INVALID;
+	int deathframe = 0;
 	if (ai_death_pose_server_enabled.GetBool() && pAnimating->IsNPC()) {
 		CAI_BaseNPC* npc = (CAI_BaseNPC*)pAnimating;
 		if (npc) {
-			int currentSeq = pAnimating->GetSequence();
-
-			//Force pAnimating to do the deathpose
-			pAnimating->SetSequence(Activity(npc->GetDeathPose()));
-			pAnimating->SetCycle((float)npc->GetDeathPoseFrame() / MAX_DEATHPOSE_FRAMES);
-
-			//Store the position
-			pAnimating->SetupBones(pBoneToWorldNext, BONE_USED_BY_ANYTHING);
-
-			//Restore the current sequence and cycle
-			pAnimating->SetSequence(currentSeq);
-
-			pAnimating->SetCycle(fCurCycle);
-			pAnimating->SetupBones(pBoneToWorld, BONE_USED_BY_ANYTHING);
+			deathpose = Activity(npc->GetDeathPose());
+			deathframe = npc->GetDeathPoseFrame();
 		}
+	}
+	if (deathpose != ACT_INVALID) {
+		int currentSequence = pAnimating->GetSequence();
+
+		pAnimating->SetSequence(deathpose);
+		pAnimating->SetCycle((float)deathframe / MAX_DEATHPOSE_FRAMES);
+
+		//Store the position
+		pAnimating->SetupBones(pBoneToWorldNext, BONE_USED_BY_ANYTHING);
+
+		//Restore the current sequence and cycle
+		pAnimating->SetSequence(currentSequence);
+
+		pAnimating->SetCycle(fCurCycle);
+		pAnimating->SetupBones(pBoneToWorld, BONE_USED_BY_ANYTHING);
 	}
 	else {
 		// Get current bones positions
-		pAnimating->SetupBones( pBoneToWorldNext, BONE_USED_BY_ANYTHING );
+		pAnimating->SetupBones(pBoneToWorldNext, BONE_USED_BY_ANYTHING);
 		// Get previous bones positions
-		pAnimating->SetCycle( fPreviousCycle );
-		pAnimating->SetupBones( pBoneToWorld, BONE_USED_BY_ANYTHING );		
+		pAnimating->SetCycle(fPreviousCycle);
+		pAnimating->SetupBones(pBoneToWorld, BONE_USED_BY_ANYTHING);
 		// Restore current cycle
-		pAnimating->SetCycle( fCurCycle );
+		pAnimating->SetCycle(fCurCycle);
 	}
 #else
 	// Get current bones positions
@@ -1611,7 +1616,11 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 	}
 	else
 	{
+#ifdef MAPBASE
+		pRagdoll->InitRagdoll( info.GetDamageForce(), forceBone, info.GetDamagePosition(), pBoneToWorld, pBoneToWorldNext, dt, collisionGroup, true, true, deathpose != ACT_INVALID );
+#else
 		pRagdoll->InitRagdoll( info.GetDamageForce(), forceBone, info.GetDamagePosition(), pBoneToWorld, pBoneToWorldNext, dt, collisionGroup, true );
+#endif
 	}
 
 	// Are we dissolving?

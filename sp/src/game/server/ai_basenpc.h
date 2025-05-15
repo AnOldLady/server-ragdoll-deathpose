@@ -1044,12 +1044,6 @@ public:
 	void				SetActivityAndSequence(Activity NewActivity, int iSequence, Activity translatedActivity, Activity weaponActivity);
 
 #ifdef MAPBASE
-	//Expose m_iDeathPose and m_iDeathPoseFrame for server ragdoll to use
-	int					GetDeathPose(void)		{ return m_iDeathPose; }
-	int					GetDeathPoseFrame(void) { return m_iDeathFrame; }
-#endif
-
-#ifdef MAPBASE
 	//-----------------------------------------------------
 
 	// Returns the gesture variant of an activity (i.e. "ACT_GESTURE_RANGE_ATTACK1")
@@ -1186,6 +1180,12 @@ public:
 
 	void				SetDeathPose( const int &iDeathPose ) { m_iDeathPose = iDeathPose; }
 	void				SetDeathPoseFrame( const int &iDeathPoseFrame ) { m_iDeathFrame = iDeathPoseFrame; }
+
+#ifdef MAPBASE
+	//Expose m_iDeathPose and m_iDeathFrame for server ragdoll to use
+	int					GetDeathPose(void) { return m_iDeathPose; }
+	int					GetDeathPoseFrame(void) { return m_iDeathFrame; }
+#endif
 	
 	void				SelectDeathPose( const CTakeDamageInfo &info );
 	virtual bool		ShouldPickADeathPose( void ) { return true; }
