@@ -790,7 +790,11 @@ void CRagdollProp::SetOverlaySequence( Activity activity )
 	}
 }
 
+#ifdef MAPBASE
+void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const Vector &forcePos, matrix3x4_t *pPrevBones, matrix3x4_t *pBoneToWorld, float dt, int collisionGroup, bool activateRagdoll, bool bWakeRagdoll, bool bDeathPose )
+#else
 void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const Vector &forcePos, matrix3x4_t *pPrevBones, matrix3x4_t *pBoneToWorld, float dt, int collisionGroup, bool activateRagdoll, bool bWakeRagdoll )
+#endif
 {
 	SetCollisionGroup( collisionGroup );
 
@@ -814,7 +818,7 @@ void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const 
 	params.forceBoneIndex = forceBone;
 	params.forcePosition = forcePos;
 #ifdef MAPBASE
-	params.pCurrentBones = ai_death_pose_server_enabled.GetBool() ? pPrevBones : pBoneToWorld;
+	params.pCurrentBones = bDeathPose ? pPrevBones : pBoneToWorld;
 #else
 	params.pCurrentBones = pBoneToWorld;
 #endif
