@@ -1516,6 +1516,7 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 	if (deathpose != ACT_INVALID) {
 		int currentSequence = pAnimating->GetSequence();
 
+		//Force pAnimating to position the deathpose
 		pAnimating->SetSequence(deathpose);
 		pAnimating->SetCycle((float)deathframe / MAX_DEATHPOSE_FRAMES);
 
